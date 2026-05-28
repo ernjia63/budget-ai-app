@@ -5,7 +5,6 @@ from database import *
 from receipt_ai import *
 from analytics import *
 from ai_advisor import *
-from jobs import *
 
 # ---------------------------------------------------
 # INITIALIZATION
@@ -30,8 +29,7 @@ menu = st.sidebar.selectbox(
         "Add Transaction",
         "Receipt Scanner",
         "Dashboard",
-        "AI Advice",
-        "Student Jobs"
+        "AI Advice"
     ]
 )
 
@@ -180,38 +178,3 @@ elif menu == "AI Advice":
         )
 
         st.write(advice)
-
-# ---------------------------------------------------
-# STUDENT JOBS
-# ---------------------------------------------------
-
-elif menu == "Student Jobs":
-
-    st.header("Nearby Student Jobs")
-
-    location = st.text_input(
-        "Location",
-        "Petaling Jaya"
-    )
-
-    if st.button("Search Jobs"):
-
-        jobs = search_student_jobs(
-            location
-        )
-
-        for job in jobs:
-
-            st.subheader(job["title"])
-
-            st.write(
-                job["company"]["display_name"]
-            )
-
-            st.write(
-                job["location"]["display_name"]
-            )
-
-            st.write(
-                job["description"][:250]
-            )
