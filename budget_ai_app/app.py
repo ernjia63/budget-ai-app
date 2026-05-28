@@ -175,7 +175,7 @@ elif menu == "AI Advice":
 
     if st.button("Generate Advice"):
 
-        advice = generate_budget_advice(
+        advice = generate_advice(
             dataframe
         )
 

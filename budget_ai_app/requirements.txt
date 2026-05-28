@@ -3,6 +3,6 @@ pandas
 plotly
 pillow
 pytesseract
-openai
+google-genai
 requests
 python-dotenv

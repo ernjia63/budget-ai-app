@@ -1,41 +1,42 @@
-from openai import OpenAI
 import os
 from dotenv import load_dotenv
+from groq import Groq
 
 load_dotenv()
 
-client = OpenAI(
-    api_key=os.getenv("YOUR_OPENAI_API_KEY")
-)
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
-def generate_budget_advice(dataframe):
+def generate_advice(summary):
     """
-    Generate AI budgeting advice.
+    Generate budgeting advice using Groq AI (FREE).
     """
 
-    if dataframe.empty:
-        return "No spending data available yet."
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful financial advisor for students."
+                },
+                {
+                    "role": "user",
+                    "content": f"""
+Analyze this student spending data:
 
-    category_summary = dataframe.groupby("category")["amount"].sum().to_dict()
+{summary}
 
-    prompt = f"""
-    You are a financial advisor for students.
+Give:
+- short summary
+- 3 saving tips
+- 1 warning
+"""
+                }
+            ]
+        )
 
-    Analyze this spending data:
-    {category_summary}
+        return response.choices[0].message.content
 
-    Give:
-    - 3 saving tips
-    - 2 spending warnings
-    - 1 weekly budget suggestion
-
-    Keep it simple and practical.
-    """
-
-    response = client.responses.create(
-        model="gpt-4.1-mini",
-        input=prompt
-    )
-
-    return response.output_text
+    except Exception as e:
+        return f"Error: {str(e)}"
