@@ -105,7 +105,7 @@ elif menu == "Receipt Scanner":
         detected_amount = detect_total(receipt_text)
 
         detected_category = (
-            classify_expense_category(
+            classify_category(
                 receipt_text
             )
         )
