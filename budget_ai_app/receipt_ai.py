@@ -2,7 +2,7 @@ import pytesseract
 import re
 
 
-def extract_text(image):
+def extract_receipt_text(image):
     """
     Extract receipt text using OCR.
     """
