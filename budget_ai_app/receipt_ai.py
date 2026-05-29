@@ -1,81 +1,173 @@
-import sqlite3
-import pandas as pd
+```python
+import pytesseract
+import re
+from PIL import Image
 
-DATABASE_NAME = "budget.db"
 
+# ---------------------------------------------------
+# EXTRACT TEXT FROM RECEIPT
+# ---------------------------------------------------
 
-def initialize_database():
+def extract_receipt_text(image):
     """
-    Create transactions table.
-    """
-
-    connection = sqlite3.connect(DATABASE_NAME)
-
-    cursor = connection.cursor()
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        transaction_type TEXT,
-        category TEXT,
-        amount REAL,
-        description TEXT,
-        transaction_date TEXT
-    )
-    """)
-
-    connection.commit()
-    connection.close()
-
-
-def add_transaction(
-    transaction_type,
-    category,
-    amount,
-    description,
-    transaction_date
-):
-    """
-    Insert new transaction.
+    Extract text from receipt image using OCR.
     """
 
-    connection = sqlite3.connect(DATABASE_NAME)
+    try:
 
-    cursor = connection.cursor()
+        # Convert image to RGB
+        image = image.convert("RGB")
 
-    cursor.execute("""
-    INSERT INTO transactions (
-        transaction_type,
-        category,
-        amount,
-        description,
-        transaction_date
-    )
-    VALUES (?, ?, ?, ?, ?)
-    """, (
-        transaction_type,
-        category,
-        amount,
-        description,
-        transaction_date
-    ))
+        # Extract text
+        text = pytesseract.image_to_string(image)
 
-    connection.commit()
-    connection.close()
+        # Handle empty OCR result
+        if not text.strip():
+
+            return "No text detected from receipt."
+
+        return text
+
+    except Exception as error:
+
+        return f"OCR Error: {error}"
 
 
-def get_transactions():
+# ---------------------------------------------------
+# DETECT TOTAL AMOUNT
+# ---------------------------------------------------
+
+def detect_total_amount(text):
     """
-    Return all transactions.
+    Detect highest amount from receipt text.
     """
 
-    connection = sqlite3.connect(DATABASE_NAME)
+    try:
 
-    dataframe = pd.read_sql_query(
-        "SELECT * FROM transactions",
-        connection
-    )
+        # Find decimal numbers
+        amounts = re.findall(r"\d+\.\d{2}", text)
 
-    connection.close()
+        if amounts:
 
-    return dataframe
+            amounts = [
+                float(amount)
+                for amount in amounts
+            ]
+
+            return max(amounts)
+
+        return 0.0
+
+    except Exception as error:
+
+        print(f"Amount Detection Error: {error}")
+
+        return 0.0
+
+
+# ---------------------------------------------------
+# CLASSIFY EXPENSE CATEGORY
+# ---------------------------------------------------
+
+def classify_expense_category(text):
+    """
+    Categorize expense using keywords.
+    """
+
+    try:
+
+        text = text.lower()
+
+        # Food
+        food_keywords = [
+            "mcd",
+            "kfc",
+            "starbucks",
+            "restaurant",
+            "food",
+            "coffee",
+            "tea"
+        ]
+
+        # Transport
+        transport_keywords = [
+            "grab",
+            "uber",
+            "parking",
+            "lrt",
+            "mrt",
+            "petrol",
+            "shell",
+            "petronas"
+        ]
+
+        # Shopping
+        shopping_keywords = [
+            "watsons",
+            "guardian",
+            "uniqlo",
+            "mr diy",
+            "shopping"
+        ]
+
+        # Grocery
+        grocery_keywords = [
+            "tesco",
+            "aeon",
+            "lotus",
+            "99 speedmart",
+            "grocery"
+        ]
+
+        # Match keywords
+        for keyword in food_keywords:
+
+            if keyword in text:
+                return "Food"
+
+        for keyword in transport_keywords:
+
+            if keyword in text:
+                return "Transport"
+
+        for keyword in shopping_keywords:
+
+            if keyword in text:
+                return "Shopping"
+
+        for keyword in grocery_keywords:
+
+            if keyword in text:
+                return "Groceries"
+
+        return "Others"
+
+    except Exception as error:
+
+        print(f"Category Classification Error: {error}")
+
+        return "Others"
+
+
+# ---------------------------------------------------
+# PROCESS RECEIPT
+# ---------------------------------------------------
+
+def process_receipt(image):
+    """
+    Complete receipt processing pipeline.
+    """
+
+    text = extract_receipt_text(image)
+
+    amount = detect_total_amount(text)
+
+    category = classify_expense_category(text)
+
+    return {
+        "text": text,
+        "amount": amount,
+        "category": category
+    }
+```
+
