@@ -6,7 +6,9 @@ def extract_receipt_text(image):
     """
     Extract text from receipt image using OCR.
     """
+import pytesseract
 
+pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
     text = pytesseract.image_to_string(image)
 
     return text
