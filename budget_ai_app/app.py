@@ -103,7 +103,6 @@ elif menu == "Receipt Scanner":
         st.text(receipt_text)
 
         detected_amount = detect_total(receipt_text)
-        )
 
         detected_category = (
             classify_expense_category(
