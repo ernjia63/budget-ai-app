@@ -1,57 +1,81 @@
-```python
-import easyocr
-import numpy as np
-from PIL import Image
-import cv2
+import sqlite3
+import pandas as pd
 
-# Initialize OCR reader
-reader = easyocr.Reader(['en'])
+DATABASE_NAME = "budget.db"
 
-def preprocess_image(image):
+
+def initialize_database():
     """
-    Improve receipt image for OCR
+    Create transactions table.
     """
 
-    # Convert PIL image to numpy array
-    img = np.array(image)
+    connection = sqlite3.connect(DATABASE_NAME)
 
-    # Convert RGB to BGR
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    cursor = connection.cursor()
 
-    # Convert to grayscale
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        transaction_type TEXT,
+        category TEXT,
+        amount REAL,
+        description TEXT,
+        transaction_date TEXT
+    )
+    """)
 
-    # Reduce noise
-    gray = cv2.GaussianBlur(gray, (3, 3), 0)
-
-    # Threshold for better OCR
-    thresh = cv2.threshold(
-        gray,
-        0,
-        255,
-        cv2.THRESH_BINARY + cv2.THRESH_OTSU
-    )[1]
-
-    return thresh
+    connection.commit()
+    connection.close()
 
 
-def extract_receipt_text(image):
+def add_transaction(
+    transaction_type,
+    category,
+    amount,
+    description,
+    transaction_date
+):
     """
-    Extract text from receipt image
+    Insert new transaction.
     """
 
-    # Preprocess image
-    processed_image = preprocess_image(image)
+    connection = sqlite3.connect(DATABASE_NAME)
 
-    # OCR detection
-    results = reader.readtext(processed_image)
+    cursor = connection.cursor()
 
-    # Combine all detected text
-    extracted_text = ""
+    cursor.execute("""
+    INSERT INTO transactions (
+        transaction_type,
+        category,
+        amount,
+        description,
+        transaction_date
+    )
+    VALUES (?, ?, ?, ?, ?)
+    """, (
+        transaction_type,
+        category,
+        amount,
+        description,
+        transaction_date
+    ))
 
-    for result in results:
-        text = result[1]
-        extracted_text += text + "\n"
+    connection.commit()
+    connection.close()
 
-    return extracted_text
-```
+
+def get_transactions():
+    """
+    Return all transactions.
+    """
+
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    dataframe = pd.read_sql_query(
+        "SELECT * FROM transactions",
+        connection
+    )
+
+    connection.close()
+
+    return dataframe
